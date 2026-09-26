@@ -114,3 +114,37 @@ resource "azurerm_virtual_machine_extension" "nginx" {
 }
 SETTINGS
 }
+resource "azurerm_monitor_action_group" "main" {
+  name                = "ag-terraform-monitoring-${var.environment}"
+  resource_group_name = azurerm_resource_group.main.name
+  short_name          = "tfmonitor"
+
+  email_receiver {
+    name                    = "primary-email"
+    email_address           = var.alert_email
+    use_common_alert_schema = true
+  }
+}
+resource "azurerm_monitor_metric_alert" "high_cpu" {
+  name                = "alert-high-cpu-${var.environment}"
+  resource_group_name = azurerm_resource_group.main.name
+  scopes              = [azurerm_linux_virtual_machine.main.id]
+
+  description = "Alert when VM CPU usage is above 80 percent for 5 minutes."
+
+  severity    = 2
+  frequency   = "PT1M"
+  window_size = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Compute/virtualMachines"
+    metric_name      = "Percentage CPU"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.main.id
+  }
+}

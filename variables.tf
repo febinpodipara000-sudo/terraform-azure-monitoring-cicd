@@ -21,3 +21,7 @@ variable "admin_username" {
   type        = string
   default     = "azureadmin"
 }
+variable "alert_email" {
+  description = "Email address for Azure Monitor alerts"
+  type        = string
+}
